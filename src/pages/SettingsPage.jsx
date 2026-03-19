@@ -1,0 +1,140 @@
+import React, { useEffect, useState } from 'react'
+import { useAuth } from '../context/AuthContext'
+import { getProfile, upsertProfile, signOut } from '../services/supabase'
+import { useNavigate } from 'react-router-dom'
+
+export default function SettingsPage() {
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const [fullName, setFullName] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+
+  useEffect(() => {
+    const load = async () => {
+      if (!user) return
+      try {
+        const profile = await getProfile(user.id)
+        setFullName(profile?.full_name || user.user_metadata?.full_name || '')
+      } catch (e) {
+        console.error(e)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [user])
+
+  const handleSave = async (e) => {
+    e.preventDefault()
+    setError(''); setSuccess('')
+    setSaving(true)
+    try {
+      await upsertProfile(user.id, { full_name: fullName })
+      setSuccess('Đã cập nhật hồ sơ thành công!')
+    } catch (err) {
+      setError(err.message || 'Lỗi khi lưu')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleSignOut = async () => {
+    await signOut()
+    navigate('/auth')
+  }
+
+  if (loading) return <div className="loading"><div className="spinner" /></div>
+
+  const initials = (fullName || user?.email || 'U').slice(0, 2).toUpperCase()
+
+  return (
+    <div style={{ maxWidth: 500 }}>
+      <div className="page-header" style={{ marginBottom: 20 }}>
+        <h1>Cài đặt tài khoản</h1>
+      </div>
+
+      {/* Avatar */}
+      <div className="card" style={{ marginBottom: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ width: 60, height: 60, borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent), var(--accent-purple))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 700, color: 'white' }}>
+            {initials}
+          </div>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: 15 }}>{fullName || 'Người dùng'}</div>
+            <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>{user?.email}</div>
+            <div style={{ color: 'var(--text-muted)', fontSize: 11, marginTop: 2 }}>
+              Tham gia: {new Date(user?.created_at).toLocaleDateString('vi-VN')}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Edit profile */}
+      <div className="card" style={{ marginBottom: 14 }}>
+        <div className="card-header">
+          <span className="card-title">Thông tin cá nhân</span>
+        </div>
+
+        {error && <div className="error-box">{error}</div>}
+        {success && <div className="success-box">{success}</div>}
+
+        <form onSubmit={handleSave}>
+          <div className="form-group">
+            <label className="form-label" htmlFor="fullNameInput">Họ và tên</label>
+            <input
+              id="fullNameInput"
+              className="form-input"
+              value={fullName}
+              onChange={e => setFullName(e.target.value)}
+              placeholder="Nhập họ và tên"
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Email</label>
+            <input className="form-input" value={user?.email || ''} disabled style={{ opacity: 0.6 }} />
+          </div>
+          <button id="btn-save-profile" className="btn btn-primary" type="submit" disabled={saving}>
+            {saving ? '⏳ Đang lưu...' : '💾 Lưu thay đổi'}
+          </button>
+        </form>
+      </div>
+
+      {/* API Info */}
+      <div className="card" style={{ marginBottom: 14 }}>
+        <div className="card-header">
+          <span className="card-title">🔑 Trạng thái API</span>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {[
+            { label: 'Supabase', key: import.meta.env.VITE_SUPABASE_URL },
+            { label: 'Finnhub', key: import.meta.env.VITE_FINNHUB_API_KEY },
+            { label: 'Gemini', key: import.meta.env.VITE_GEMINI_API_KEY },
+          ].map(item => (
+            <div key={item.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+              <span style={{ fontSize: 13, fontWeight: 500 }}>{item.label}</span>
+              <span className={`badge ${item.key && !item.key.startsWith('your_') ? 'badge-green' : 'badge-red'}`}>
+                {item.key && !item.key.startsWith('your_') ? '✅ Đã cấu hình' : '❌ Chưa cấu hình'}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Danger zone */}
+      <div className="card" style={{ borderColor: 'rgba(239,68,68,0.3)' }}>
+        <div className="card-header">
+          <span className="card-title" style={{ color: 'var(--accent-red)' }}>⚠️ Vùng nguy hiểm</span>
+        </div>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>
+          Đăng xuất khỏi tất cả thiết bị
+        </p>
+        <button id="btn-signout" className="btn btn-danger" onClick={handleSignOut}>
+          ↪ Đăng xuất
+        </button>
+      </div>
+    </div>
+  )
+}
