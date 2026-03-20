@@ -38,6 +38,14 @@ export default function Layout() {
   const initials = displayName.slice(0, 2).toUpperCase()
 
   const [time, setTime] = useState(new Date())
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark')
+  
+  useEffect(() => {
+    localStorage.setItem('theme', theme)
+    if (theme === 'light') document.body.classList.add('light-mode')
+    else document.body.classList.remove('light-mode')
+  }, [theme])
+
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000)
     return () => clearInterval(timer)
@@ -95,6 +103,9 @@ export default function Layout() {
             <p>{currentPage.sub}</p>
           </div>
           <div className="header-actions">
+            <button className="btn btn-ghost btn-sm" style={{ marginRight: 10, padding: '4px 10px', fontSize: 12 }} onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}>
+              {theme === 'dark' ? '☀️ Đổi nền sáng' : '🌙 Dùng nền đen'}
+            </button>
             <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
               {time.toLocaleTimeString('vi-VN')} • {time.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}
             </span>

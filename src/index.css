@@ -748,3 +748,27 @@ td.right, th.right { text-align: right; }
 .gap-8 { gap: 8px; }
 .gap-12 { gap: 12px; }
 .font-mono { font-family: 'Courier New', monospace; }
+
+/* ===== LIGHT MODE (SÁNG) ===== */
+body.light-mode {
+  --bg-primary: #f0f4f8;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-hover: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --border-light: #cbd5e1;
+}
+
+body.light-mode .btn-ghost {
+  background: transparent;
+  border-color: var(--border-light);
+}
+body.light-mode .btn-ghost:hover {
+  background: var(--bg-hover);
+}
+body.light-mode .header {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}

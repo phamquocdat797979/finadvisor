@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { getPortfolios, createPortfolio, getHoldings } from '../services/supabase'
 import { getMultipleQuotes, getMarketNews, formatPrice, formatChange } from '../services/finnhub'
 import { useNavigate } from 'react-router-dom'
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 
 export default function DashboardPage() {
   const { user } = useAuth()
@@ -76,6 +77,9 @@ export default function DashboardPage() {
 
   const { totalValue = 0, totalGainLoss = 0, totalGainPct = 0, holdings = [] } = portfolioData || {}
 
+  const pieData = holdings.map(h => ({ name: h.ticker, value: h.value }))
+  const COLORS = ['#4f9cf9', '#a855f7', '#22c55e', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4']
+
   return (
     <div>
       {/* Greeting */}
@@ -111,6 +115,23 @@ export default function DashboardPage() {
           <div className="stat-value">{holdings.length}</div>
           <div className="stat-sub">mã cổ phiếu</div>
         </div>
+      </div>
+
+      {/* Pie Chart Phân Bổ */}
+      <div className="card" style={{ marginBottom: 14 }}>
+        <div className="card-header"><span className="card-title">Phân bổ tài sản</span></div>
+        {holdings.length === 0 ? <p style={{ fontSize: 13, padding: '20px 0', textAlign: 'center', color: 'var(--text-muted)' }}>Chưa có dữ liệu</p> : (
+          <div style={{ width: '100%', height: 220 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={4} dataKey="value" stroke="none">
+                  {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                </Pie>
+                <Tooltip formatter={(val) => formatPrice(val)} itemStyle={{ color: 'var(--text-primary)', fontSize: 13 }} contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)', borderRadius: '6px' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </div>
 
       {/* Holdings & News */}

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { getPortfolios, getHoldings, getProfile } from '../services/supabase'
+import { getPortfolios, getHoldings, getProfile, upsertProfile } from '../services/supabase'
 import { getMarketNews, getMultipleQuotes } from '../services/finnhub'
 import { askGemini } from '../services/gemini'
 
@@ -37,12 +37,28 @@ export default function AssistantPage() {
     ];
   })
 
-  // Lưu lịch sử chat mỗi khi gửi tin nhắn
+  // Đồng bộ lưu lịch sử liên tục lên Đám mây (fallback vào LocalStorage nếu chưa Add Column)
   useEffect(() => {
     if (user && user.id) {
       localStorage.setItem(`chat_${user.id}`, JSON.stringify(messages));
+      if (messages.length > 1) {
+        upsertProfile(user.id, { chat_history: messages }).catch(() => {})
+      }
     }
   }, [messages, user])
+
+  // Tải lịch sử thông minh từ Database ở lần mở đầu tiên
+  useEffect(() => {
+    let unmounted = false;
+    if (user && user.id) {
+      getProfile(user.id).then(profile => {
+        if (!unmounted && profile?.chat_history && profile.chat_history.length > 1) {
+          setMessages(profile.chat_history);
+        }
+      }).catch(() => {});
+    }
+    return () => { unmounted = true };
+  }, [user])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [context, setContext] = useState(null)
