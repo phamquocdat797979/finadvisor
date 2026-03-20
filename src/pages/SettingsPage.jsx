@@ -125,7 +125,7 @@ export default function SettingsPage() {
             />
           </div>
           <div className="form-group">
-            <label className="form-label">Email</label>
+            <label className="form-label">Gmail</label>
             <input className="form-input" value={user?.email || ''} disabled style={{ opacity: 0.6 }} />
           </div>
           <button id="btn-save-profile" className="btn btn-primary" type="submit" disabled={saving}>

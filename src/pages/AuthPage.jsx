@@ -26,7 +26,7 @@ export default function AuthPage() {
         const isExists = await checkEmailExists(email)
         
         if (isExists === false) {
-          throw new Error('🛑 Lỗi: Tài khoản Email này chưa được đăng ký trong mạng lưới FinAdvisor!')
+          throw new Error('🛑 Lỗi: Tài khoản Gmail này chưa được đăng ký trong mạng lưới FinAdvisor!')
         }
         
         try {
@@ -35,7 +35,7 @@ export default function AuthPage() {
         } catch (loginErr) {
           if (loginErr.message?.includes('Invalid login')) {
             if (isExists) throw new Error('🔑 Lỗi: Mật khẩu bạn nhập không chính xác!')
-            else throw new Error('Email chưa đăng ký hoặc Mật khẩu không đúng! (Chú ý: Cần dán mã lệnh ở file SQL add_check_email_rpc.sql vào Supabase Editor để chia tách thông báo lỗi).')
+            else throw new Error('Gmail chưa đăng ký hoặc Mật khẩu không đúng! (Chú ý: Cần dán mã lệnh ở file SQL add_check_email_rpc.sql vào Supabase Editor để chia tách thông báo lỗi).')
           }
           throw loginErr
         }
@@ -43,7 +43,7 @@ export default function AuthPage() {
         const data = await signUp(email, password, fullName)
         // Check "Gương chiếu yêu": Bắt bài Supabase cố tình trả về success ảo khi trùng Email
         if (data?.user?.identities && data.user.identities.length === 0) {
-          setError('Thất bại: Email này đã được đăng ký từ trước. Vui lòng quay lại tab Đăng Nhập!')
+          setError('Thất bại: Gmail này đã được đăng ký từ trước. Vui lòng quay lại tab Đăng Nhập!')
           setLoading(false)
           return
         }
@@ -52,7 +52,7 @@ export default function AuthPage() {
       } else if (tab === 'forgot') {
         if (forgotStep === 1) {
           await resetPassword(email)
-          setSuccess('Đã gửi mã OTP (hoặc link) đến email của bạn! (Kiểm tra cả hộp thư rác).')
+          setSuccess('Đã gửi mã OTP (hoặc link) đến Gmail của bạn! (Kiểm tra cả hộp thư rác).')
           setForgotStep(2)
         } else if (forgotStep === 2) {
           // Gắn biển hiệu để chặn 'Thằng Bảo Vệ PublicRoute' không sỉ nhục đá mình vào Trang Chủ
@@ -75,9 +75,9 @@ export default function AuthPage() {
     } catch (err) {
       sessionStorage.removeItem('isResettingPassword') // Có lỗi thì giải tán
       const msg = err.message || 'Có lỗi xảy ra'
-      if (msg.includes('Email not confirmed')) setError('⚠️ Vui lòng mở Hộp thư Email của bạn và bấn link xác nhận để kích hoạt tài khoản!')
-      else if (msg.includes('rate limit')) setError('⛔ Thao tác quá nhanh! Bạn đã vượt giới hạn gửi Email từ máy chủ. Vui lòng thử lại sau.')
-      else if (msg.includes('already registered')) setError('Email này đã được đăng ký')
+      if (msg.includes('Email not confirmed')) setError('⚠️ Vui lòng mở Hộp thư Gmail của bạn và bấn link xác nhận để kích hoạt tài khoản!')
+      else if (msg.includes('rate limit')) setError('⛔ Thao tác quá nhanh! Bạn đã vượt giới hạn gửi Gmail từ máy chủ. Vui lòng thử lại sau.')
+      else if (msg.includes('already registered')) setError('Gmail này đã được đăng ký')
       else setError(msg)
     } finally {
       setLoading(false)
@@ -118,15 +118,15 @@ export default function AuthPage() {
             <>
               {forgotStep === 1 && (
                 <div className="form-group">
-                  <label className="form-label" htmlFor="emailForgot">Email tài khoản cần khôi phục</label>
-                  <input id="emailForgot" className="form-input" type="email" placeholder="email@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
+                  <label className="form-label" htmlFor="emailForgot">Gmail tài khoản cần khôi phục</label>
+                  <input id="emailForgot" className="form-input" type="email" placeholder="vi_du@gmail.com" value={email} onChange={e => setEmail(e.target.value)} required />
                 </div>
               )}
               {forgotStep === 2 && (
                 <div className="form-group">
-                  <label className="form-label" htmlFor="otpCode">Mã OTP từ Email</label>
+                  <label className="form-label" htmlFor="otpCode">Mã OTP từ Gmail</label>
                   <input id="otpCode" className="form-input" type="text" placeholder="Nhập dãy mã số..." value={otp} onChange={e => setOtp(e.target.value)} required />
-                  <p style={{fontSize: 11, color:'var(--text-muted)', marginTop: 4}}>* Lưu ý quan trọng: Điền mã này xong VÀ tuyệt đối không bấm vào link xanh trong Email để tránh làm hỏng mã.</p>
+                  <p style={{fontSize: 11, color:'var(--text-muted)', marginTop: 4}}>* Lưu ý quan trọng: Điền mã này xong VÀ tuyệt đối không bấm vào link xanh trong Gmail để tránh làm hỏng mã.</p>
                 </div>
               )}
               {forgotStep === 3 && (
@@ -151,8 +151,8 @@ export default function AuthPage() {
                 </div>
               )}
               <div className="form-group">
-                <label className="form-label" htmlFor="email">Email</label>
-                <input id="email" className="form-input" type="email" placeholder="email@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
+                <label className="form-label" htmlFor="email">Gmail</label>
+                <input id="email" className="form-input" type="email" placeholder="vi_du@gmail.com" value={email} onChange={e => setEmail(e.target.value)} required />
               </div>
               <div className="form-group">
                 <label className="form-label" htmlFor="password">Mật khẩu</label>
