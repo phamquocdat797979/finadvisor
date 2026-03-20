@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { getProfile, upsertProfile, signOut, supabase } from '../services/supabase'
+import { getProfile, upsertProfile, signOut, supabase, deleteUserAccount } from '../services/supabase'
 import { useNavigate } from 'react-router-dom'
 
 export default function SettingsPage() {
@@ -66,6 +66,16 @@ export default function SettingsPage() {
   const handleSignOut = async () => {
     await signOut()
     navigate('/auth')
+  }
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm("💣 CẢNH BÁO MỨC ĐỘ CAO: Hành động này sẽ phế truất VĨNH VIỄN tài khoản của bạn khỏi hệ thống. Bạn có chắn chắn muốn xoá không?")) return;
+    try {
+      await deleteUserAccount()
+      navigate('/auth')
+    } catch (err) {
+      alert("❌ Khóa máy chủ bảo vệ: Để nhấn được nút Này bạn phải chạy cài đặt file 'add_delete_account_rpc.sql' bên trong SQL Editor của Supabase trước.\nChi tiết bắt lỗi: " + err.message)
+    }
   }
 
   if (loading) return <div className="loading"><div className="spinner" /></div>
@@ -147,6 +157,19 @@ export default function SettingsPage() {
             {pwdStatus.loading ? '⏳ Xin chờ...' : '🔒 Cập nhật mật khẩu'}
           </button>
         </form>
+      </div>
+
+      {/* Xóa tài khoản (Danger Zone) */}
+      <div className="card" style={{ marginBottom: 14, borderColor: 'rgba(239, 68, 68, 0.4)', borderWidth: 1, borderStyle: 'solid' }}>
+        <div className="card-header">
+          <span className="card-title" style={{ color: 'var(--accent-red)' }}>⚠️ Vùng nguy hiểm</span>
+        </div>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 14 }}>
+          Mọi dữ liệu theo dõi Danh mục, Cổ phiếu tự sinh, Lưu trữ Chat AI của bạn sẽ bị xóa sổ hoàn toàn khỏi Hệ thống. KHÔNG THỂ KHÔI PHỤC!
+        </p>
+        <button className="btn" onClick={handleDeleteAccount} style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--accent-red)', border: '1px solid var(--accent-red)' }}>
+          🗑️ Khởi động hủy diệt Tài khoản
+        </button>
       </div>
 
       {/* API Info */}

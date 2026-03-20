@@ -27,6 +27,24 @@ export const signOut = async () => {
   if (error) throw error
 }
 
+export const resetPassword = async (email) => {
+  const { error } = await supabase.auth.resetPasswordForEmail(email)
+  if (error) throw error
+}
+
+export const verifyOtpToken = async (email, token) => {
+  const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'recovery' })
+  if (error) throw error
+  return data
+}
+
+export const deleteUserAccount = async () => {
+  // Cần chạy mã hàm SQL tạo function delete_user_account() trên Supabase trước
+  const { error } = await supabase.rpc('delete_user_account')
+  if (error) throw error
+  await signOut()
+}
+
 export const getSession = async () => {
   const { data: { session } } = await supabase.auth.getSession()
   return session

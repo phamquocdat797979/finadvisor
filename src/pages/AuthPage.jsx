@@ -1,9 +1,12 @@
 import React, { useState } from 'react'
-import { signIn, signUp } from '../services/supabase'
+import { signIn, signUp, resetPassword, verifyOtpToken, supabase } from '../services/supabase'
 import { useNavigate } from 'react-router-dom'
 
 export default function AuthPage() {
-  const [tab, setTab] = useState('login') // 'login' | 'register'
+  const [tab, setTab] = useState('login') // 'login' | 'register' | 'forgot'
+  const [forgotStep, setForgotStep] = useState(1) // 1: Email, 2: OTP, 3: New Pass
+  const [otp, setOtp] = useState('')
+  const [newPassword, setNewPassword] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
@@ -21,7 +24,7 @@ export default function AuthPage() {
       if (tab === 'login') {
         await signIn(email, password)
         navigate('/dashboard')
-      } else {
+      } else if (tab === 'register') {
         const data = await signUp(email, password, fullName)
         // Check "Gương chiếu yêu": Bắt bài Supabase cố tình trả về success ảo khi trùng Email
         if (data?.user?.identities && data.user.identities.length === 0) {
@@ -31,6 +34,21 @@ export default function AuthPage() {
         }
         setSuccess('Tạo tài khoản thành công! Tự động chuyển sang Đăng nhập sau 2 giây...')
         setTimeout(() => setTab('login'), 2000)
+      } else if (tab === 'forgot') {
+        if (forgotStep === 1) {
+          await resetPassword(email)
+          setSuccess('Đã gửi mã OTP (hoặc link) đến email của bạn! (Kiểm tra cả hộp thư rác).')
+          setForgotStep(2)
+        } else if (forgotStep === 2) {
+          await verifyOtpToken(email, otp)
+          setSuccess('Xác thực Mã OTP thành công! Mời nhập mật khẩu mới.')
+          setForgotStep(3)
+        } else if (forgotStep === 3) {
+          const { error } = await supabase.auth.updateUser({ password: newPassword })
+          if (error) throw error
+          setSuccess('Đổi Mật Khẩu thành công! Đang vào hệ thống...')
+          setTimeout(() => navigate('/dashboard'), 2000)
+        }
       }
     } catch (err) {
       const msg = err.message || 'Có lỗi xảy ra'
@@ -73,54 +91,64 @@ export default function AuthPage() {
         {success && <div className="success-box">✅ {success}</div>}
 
         <form onSubmit={handleSubmit}>
-          {tab === 'register' && (
-            <div className="form-group">
-              <label className="form-label" htmlFor="fullName">Họ và tên</label>
-              <input
-                id="fullName"
-                className="form-input"
-                type="text"
-                placeholder="Nguyễn Văn A"
-                value={fullName}
-                onChange={e => setFullName(e.target.value)}
-                required
-              />
-            </div>
+          {tab === 'forgot' ? (
+            <>
+              {forgotStep === 1 && (
+                <div className="form-group">
+                  <label className="form-label" htmlFor="emailForgot">Email tài khoản cần khôi phục</label>
+                  <input id="emailForgot" className="form-input" type="email" placeholder="email@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
+                </div>
+              )}
+              {forgotStep === 2 && (
+                <div className="form-group">
+                  <label className="form-label" htmlFor="otpCode">Mã OTP (gồm 6 chữ số)</label>
+                  <input id="otpCode" className="form-input" type="text" placeholder="Ví dụ: 123456" value={otp} onChange={e => setOtp(e.target.value)} required />
+                  <p style={{fontSize: 11, color:'var(--text-muted)', marginTop: 4}}>* Lưu ý: Mặc định Supabase gửi link, bạn vui lòng copy 6 số cuối trong link hoặc bấm trực tiếp vào link.</p>
+                </div>
+              )}
+              {forgotStep === 3 && (
+                <div className="form-group">
+                  <label className="form-label" htmlFor="newPass">Mật khẩu mới</label>
+                  <input id="newPass" className="form-input" type="password" placeholder="••••••••" value={newPassword} onChange={e => setNewPassword(e.target.value)} required minLength={6} />
+                </div>
+              )}
+              <button className="btn btn-primary" type="submit" disabled={loading} style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}>
+                {loading ? '⏳ Xin chờ...' : forgotStep === 1 ? '📩 Gửi yêu cầu OTP' : forgotStep === 2 ? '✅ Xác thực OTP' : '🔒 Đặt lại mật khẩu'}
+              </button>
+              <button type="button" onClick={() => { setTab('login'); setForgotStep(1); setError(''); setSuccess(''); }} style={{ width: '100%', marginTop: 12, background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 13 }}>
+                ← Quay lại Đăng nhập
+              </button>
+            </>
+          ) : (
+            <>
+              {tab === 'register' && (
+                <div className="form-group">
+                  <label className="form-label" htmlFor="fullName">Họ và tên</label>
+                  <input id="fullName" className="form-input" type="text" placeholder="Nguyễn Văn A" value={fullName} onChange={e => setFullName(e.target.value)} required />
+                </div>
+              )}
+              <div className="form-group">
+                <label className="form-label" htmlFor="email">Email</label>
+                <input id="email" className="form-input" type="email" placeholder="email@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
+              </div>
+              <div className="form-group">
+                <label className="form-label" htmlFor="password">Mật khẩu</label>
+                <input id="password" className="form-input" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
+              </div>
+
+              {tab === 'login' && (
+                <div style={{ textAlign: 'right', marginBottom: 12 }}>
+                  <button type="button" onClick={() => { setTab('forgot'); setForgotStep(1); setError(''); setSuccess('') }} style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: 12, cursor: 'pointer' }}>
+                    Bạn quên mật khẩu?
+                  </button>
+                </div>
+              )}
+
+              <button id="btn-submit-auth" className="btn btn-primary" type="submit" disabled={loading} style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}>
+                {loading ? '⏳ Đang xử lý...' : tab === 'login' ? '🔑 Đăng nhập' : '🚀 Tạo tài khoản'}
+              </button>
+            </>
           )}
-          <div className="form-group">
-            <label className="form-label" htmlFor="email">Email</label>
-            <input
-              id="email"
-              className="form-input"
-              type="email"
-              placeholder="email@example.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="password">Mật khẩu</label>
-            <input
-              id="password"
-              className="form-input"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
-          </div>
-          <button
-            id="btn-submit-auth"
-            className="btn btn-primary"
-            type="submit"
-            disabled={loading}
-            style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}
-          >
-            {loading ? '⏳ Đang xử lý...' : tab === 'login' ? '🔑 Đăng nhập' : '🚀 Tạo tài khoản'}
-          </button>
         </form>
 
         <div className="auth-footer">
