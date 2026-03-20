@@ -40,6 +40,11 @@ export default function AuthPage() {
           throw loginErr
         }
       } else if (tab === 'register') {
+        const cleanEmail = email.toLowerCase().trim()
+        if (!cleanEmail.endsWith('@gmail.com')) {
+          throw new Error('⛔ Lớp bảo mật: Hệ thống chỉ chấp nhận đăng ký bằng tài khoản có chữ đuôi @gmail.com gốc!')
+        }
+        
         const data = await signUp(email, password, fullName)
         // Check "Gương chiếu yêu": Bắt bài Supabase cố tình trả về success ảo khi trùng Email
         if (data?.user?.identities && data.user.identities.length === 0) {
