@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { getProfile, upsertProfile, signOut } from '../services/supabase'
+import { getProfile, upsertProfile, signOut, supabase } from '../services/supabase'
 import { useNavigate } from 'react-router-dom'
 
 export default function SettingsPage() {
@@ -27,17 +27,39 @@ export default function SettingsPage() {
     load()
   }, [user])
 
+  const [newPassword, setNewPassword] = useState('')
+  const [pwdStatus, setPwdStatus] = useState({ error: '', success: '', loading: false })
+
   const handleSave = async (e) => {
     e.preventDefault()
     setError(''); setSuccess('')
     setSaving(true)
     try {
       await upsertProfile(user.id, { full_name: fullName })
+      // Đồng bộ thông tin tên vào hệ thống Auth của Supabase để toàn Web cập nhật tên ngay lập tức
+      await supabase.auth.updateUser({ data: { full_name: fullName } }) 
       setSuccess('Đã cập nhật hồ sơ thành công!')
     } catch (err) {
       setError(err.message || 'Lỗi khi lưu')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleUpdatePassword = async (e) => {
+    e.preventDefault()
+    if (!newPassword || newPassword.length < 6) {
+      setPwdStatus({ error: 'Mật khẩu mới phải từ 6 ký tự trở lên', success: '', loading: false })
+      return
+    }
+    setPwdStatus({ error: '', success: '', loading: true })
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    
+    if (error) {
+      setPwdStatus({ error: error.message, success: '', loading: false })
+    } else {
+      setPwdStatus({ error: '', success: 'Đổi mật khẩu thành công! Hãy ghi nhớ nó nhé.', loading: false })
+      setNewPassword('')
     }
   }
 
@@ -98,6 +120,31 @@ export default function SettingsPage() {
           </div>
           <button id="btn-save-profile" className="btn btn-primary" type="submit" disabled={saving}>
             {saving ? '⏳ Đang lưu...' : '💾 Lưu thay đổi'}
+          </button>
+        </form>
+      </div>
+
+      {/* Thay đổi mật khẩu */}
+      <div className="card" style={{ marginBottom: 14 }}>
+        <div className="card-header">
+          <span className="card-title">Thay đổi mật khẩu</span>
+        </div>
+        {pwdStatus.error && <div className="error-box">{pwdStatus.error}</div>}
+        {pwdStatus.success && <div className="success-box">{pwdStatus.success}</div>}
+        <form onSubmit={handleUpdatePassword}>
+          <div className="form-group">
+            <label className="form-label" htmlFor="newPasswordInput">Mật khẩu mới</label>
+            <input
+              id="newPasswordInput"
+              type="password"
+              className="form-input"
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              placeholder="Nhập ít nhất 6 ký tự..."
+            />
+          </div>
+          <button className="btn btn-primary" type="submit" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'white' }} disabled={pwdStatus.loading}>
+            {pwdStatus.loading ? '⏳ Xin chờ...' : '🔒 Cập nhật mật khẩu'}
           </button>
         </form>
       </div>

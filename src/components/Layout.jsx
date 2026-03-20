@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { signOut } from '../services/supabase'
@@ -36,6 +36,12 @@ export default function Layout() {
   const email = user?.email || ''
   const displayName = user?.user_metadata?.full_name || email.split('@')[0] || 'User'
   const initials = displayName.slice(0, 2).toUpperCase()
+
+  const [time, setTime] = useState(new Date())
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000)
+    return () => clearInterval(timer)
+  }, [])
 
   return (
     <div className="app-layout">
@@ -89,8 +95,8 @@ export default function Layout() {
             <p>{currentPage.sub}</p>
           </div>
           <div className="header-actions">
-            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-              {new Date().toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' })}
+            <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+              {time.toLocaleTimeString('vi-VN')} • {time.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}
             </span>
           </div>
         </header>
