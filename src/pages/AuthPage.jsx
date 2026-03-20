@@ -35,6 +35,7 @@ export default function AuthPage() {
     } catch (err) {
       const msg = err.message || 'Có lỗi xảy ra'
       if (msg.includes('Invalid login')) setError('Email hoặc mật khẩu không đúng')
+      else if (msg.includes('Email not confirmed')) setError('⚠️ Vui lòng mở Hộp thư Email của bạn và bấn link xác nhận để kích hoạt tài khoản!')
       else if (msg.includes('already registered')) setError('Email này đã được đăng ký')
       else setError(msg)
     } finally {
