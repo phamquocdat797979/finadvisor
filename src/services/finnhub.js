@@ -19,6 +19,16 @@ export const getMultipleQuotes = async (symbols) => {
   return Promise.all(promises)
 }
 
+// Lấy tên và thông tin công ty cơ bản
+export const getCompanyProfile = async (symbol) => {
+  return fetchFinnhub(`/stock/profile2?symbol=${symbol.toUpperCase()}`)
+}
+
+export const getMultipleProfiles = async (symbols) => {
+  const promises = symbols.map(s => getCompanyProfile(s).then(p => ({ symbol: s, ...p })).catch(() => ({ symbol: s })))
+  return Promise.all(promises)
+}
+
 // Tìm kiếm mã cổ phiếu
 export const searchSymbol = async (query) => {
   const data = await fetchFinnhub(`/search?q=${encodeURIComponent(query)}`)

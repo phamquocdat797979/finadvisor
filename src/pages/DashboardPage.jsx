@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { getPortfolios, createPortfolio, getHoldings } from '../services/supabase'
-import { getMultipleQuotes, getMarketNews, formatPrice, formatChange } from '../services/finnhub'
+import { getMultipleQuotes, getMarketNews, getMultipleProfiles, formatPrice, formatChange } from '../services/finnhub'
 import { useNavigate } from 'react-router-dom'
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 
 export default function DashboardPage() {
   const { user } = useAuth()
@@ -34,15 +34,23 @@ export default function DashboardPage() {
 
       if (holdings.length > 0) {
         const symbols = holdings.map(h => h.ticker)
-        const quotes = await getMultipleQuotes(symbols)
+        
+        // Gọi song song giá hiện tại và thông tin Profile công ty
+        const [quotes, profiles] = await Promise.all([
+          getMultipleQuotes(symbols),
+          getMultipleProfiles(symbols)
+        ])
+        
         enrichedHoldings = holdings.map(h => {
           const q = quotes.find(q => q.symbol === h.ticker)
+          const p = profiles.find(p => p.symbol === h.ticker)
           const currentPrice = q?.c || 0
           const value = currentPrice * h.quantity
           const cost = h.average_cost * h.quantity
+          const companyName = p?.name || h.ticker
           totalValue += value
           totalCost += cost
-          return { ...h, currentPrice, value, cost }
+          return { ...h, currentPrice, value, cost, companyName }
         })
       }
 
@@ -77,7 +85,8 @@ export default function DashboardPage() {
 
   const { totalValue = 0, totalGainLoss = 0, totalGainPct = 0, holdings = [] } = portfolioData || {}
 
-  const pieData = holdings.map(h => ({ name: h.ticker, value: h.value }))
+  // Gắn tên đầy đủ (companyName) để vẽ Legend trên biểu đồ
+  const pieData = holdings.map(h => ({ name: h.companyName, value: h.value }))
   const COLORS = ['#4f9cf9', '#a855f7', '#22c55e', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4']
 
   return (
@@ -121,13 +130,14 @@ export default function DashboardPage() {
       <div className="card" style={{ marginBottom: 14 }}>
         <div className="card-header"><span className="card-title">Phân bổ tài sản</span></div>
         {holdings.length === 0 ? <p style={{ fontSize: 13, padding: '20px 0', textAlign: 'center', color: 'var(--text-muted)' }}>Chưa có dữ liệu</p> : (
-          <div style={{ width: '100%', height: 220 }}>
+          <div style={{ width: '100%', height: 260 }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={4} dataKey="value" stroke="none">
+                <Pie data={pieData} cx="50%" cy="45%" innerRadius={55} outerRadius={80} paddingAngle={4} dataKey="value" stroke="none">
                   {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                 </Pie>
                 <Tooltip formatter={(val) => formatPrice(val)} itemStyle={{ color: 'var(--text-primary)', fontSize: 13 }} contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)', borderRadius: '6px' }} />
+                <Legend iconType="circle" verticalAlign="bottom" wrapperStyle={{ fontSize: 12, lineHeight: 1.4, color: 'var(--text-primary)', paddingTop: 10 }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
