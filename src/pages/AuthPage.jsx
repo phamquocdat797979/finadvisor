@@ -101,9 +101,9 @@ export default function AuthPage() {
               )}
               {forgotStep === 2 && (
                 <div className="form-group">
-                  <label className="form-label" htmlFor="otpCode">Mã OTP (gồm 6 chữ số)</label>
-                  <input id="otpCode" className="form-input" type="text" placeholder="Ví dụ: 123456" value={otp} onChange={e => setOtp(e.target.value)} required />
-                  <p style={{fontSize: 11, color:'var(--text-muted)', marginTop: 4}}>* Lưu ý: Mặc định Supabase gửi link, bạn vui lòng copy 6 số cuối trong link hoặc bấm trực tiếp vào link.</p>
+                  <label className="form-label" htmlFor="otpCode">Mã OTP từ Email</label>
+                  <input id="otpCode" className="form-input" type="text" placeholder="Nhập dãy mã số..." value={otp} onChange={e => setOtp(e.target.value)} required />
+                  <p style={{fontSize: 11, color:'var(--text-muted)', marginTop: 4}}>* Lưu ý quan trọng: Điền mã này xong VÀ tuyệt đối không bấm vào link xanh trong Email để tránh làm hỏng mã.</p>
                 </div>
               )}
               {forgotStep === 3 && (
