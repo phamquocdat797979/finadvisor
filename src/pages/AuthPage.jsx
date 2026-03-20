@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { signIn, signUp, resetPassword, verifyOtpToken, supabase } from '../services/supabase'
+import { signIn, signUp, resetPassword, verifyOtpToken, supabase, checkEmailExists } from '../services/supabase'
 import { useNavigate } from 'react-router-dom'
 
 export default function AuthPage() {
@@ -23,8 +23,22 @@ export default function AuthPage() {
     setLoading(true)
     try {
       if (tab === 'login') {
-        await signIn(email, password)
-        navigate('/dashboard')
+        const isExists = await checkEmailExists(email)
+        
+        if (isExists === false) {
+          throw new Error('🛑 Lỗi: Tài khoản Email này chưa được đăng ký trong mạng lưới FinAdvisor!')
+        }
+        
+        try {
+          await signIn(email, password)
+          navigate('/dashboard')
+        } catch (loginErr) {
+          if (loginErr.message?.includes('Invalid login')) {
+            if (isExists) throw new Error('🔑 Lỗi: Mật khẩu bạn nhập không chính xác!')
+            else throw new Error('Email chưa đăng ký hoặc Mật khẩu không đúng! (Chú ý: Cần dán mã lệnh ở file SQL add_check_email_rpc.sql vào Supabase Editor để chia tách thông báo lỗi).')
+          }
+          throw loginErr
+        }
       } else if (tab === 'register') {
         const data = await signUp(email, password, fullName)
         // Check "Gương chiếu yêu": Bắt bài Supabase cố tình trả về success ảo khi trùng Email
@@ -61,8 +75,7 @@ export default function AuthPage() {
     } catch (err) {
       sessionStorage.removeItem('isResettingPassword') // Có lỗi thì giải tán
       const msg = err.message || 'Có lỗi xảy ra'
-      if (msg.includes('Invalid login')) setError('Email hoặc mật khẩu không đúng')
-      else if (msg.includes('Email not confirmed')) setError('⚠️ Vui lòng mở Hộp thư Email của bạn và bấn link xác nhận để kích hoạt tài khoản!')
+      if (msg.includes('Email not confirmed')) setError('⚠️ Vui lòng mở Hộp thư Email của bạn và bấn link xác nhận để kích hoạt tài khoản!')
       else if (msg.includes('rate limit')) setError('⛔ Thao tác quá nhanh! Bạn đã vượt giới hạn gửi Email từ máy chủ. Vui lòng thử lại sau.')
       else if (msg.includes('already registered')) setError('Email này đã được đăng ký')
       else setError(msg)

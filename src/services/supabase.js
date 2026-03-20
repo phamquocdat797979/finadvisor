@@ -22,6 +22,12 @@ export const signIn = async (email, password) => {
   return data
 }
 
+export const checkEmailExists = async (email) => {
+  const { data, error } = await supabase.rpc('check_email_exists', { lookup_email: email })
+  if (error) return null // Nếu người dùng chưa chạy file SQL thì bỏ qua
+  return data // Trả về true hoặc false
+}
+
 export const signOut = async () => {
   const { error } = await supabase.auth.signOut()
   if (error) throw error
