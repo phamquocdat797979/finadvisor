@@ -91,14 +91,19 @@ export default function DashboardPage() {
 
   return (
     <div>
-      {/* Greeting */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: '1.3rem', marginBottom: 4 }}>
-          Xin chào, {displayName} 👋
-        </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-          Đây là tổng quan danh mục tài chính của bạn hôm nay.
-        </p>
+      {/* Greeting & Quick AI */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, gap: 14, flexWrap: 'wrap' }}>
+        <div>
+          <h1 style={{ fontSize: '1.3rem', marginBottom: 4 }}>
+            Xin chào, {displayName} 👋
+          </h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+            Đây là tổng quan danh mục tài chính của bạn hôm nay.
+          </p>
+        </div>
+        <button className="btn btn-primary" onClick={() => navigate('/assistant')} style={{ padding: '8px 16px', fontSize: 13, borderRadius: '8px', boxShadow: '0 4px 12px rgba(79,156,249,0.3)' }}>
+          🤖 Hỏi AI Advisor ngay
+        </button>
       </div>
 
       {error && <div className="error-box">{error}</div>}
@@ -126,28 +131,28 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Pie Chart Phân Bổ */}
-      <div className="card" style={{ marginBottom: 14 }}>
-        <div className="card-header"><span className="card-title">Phân bổ tài sản</span></div>
-        {holdings.length === 0 ? <p style={{ fontSize: 13, padding: '20px 0', textAlign: 'center', color: 'var(--text-muted)' }}>Chưa có dữ liệu</p> : (
-          <div style={{ width: '100%', height: 260 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={pieData} cx="50%" cy="45%" innerRadius={55} outerRadius={80} paddingAngle={4} dataKey="value" stroke="none">
-                  {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
-                </Pie>
-                <Tooltip formatter={(val) => formatPrice(val)} itemStyle={{ color: 'var(--text-primary)', fontSize: 13 }} contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)', borderRadius: '6px' }} />
-                <Legend iconType="circle" verticalAlign="bottom" wrapperStyle={{ fontSize: 12, lineHeight: 1.4, color: 'var(--text-primary)', paddingTop: 10 }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-      </div>
+      {/* Pie Chart & Holdings (Row 2) */}
+      <div className="grid-2" style={{ gap: 14, alignItems: 'start', marginBottom: 14 }}>
+        {/* Pie Chart Phân Bổ */}
+        <div className="card" style={{ height: '100%' }}>
+          <div className="card-header"><span className="card-title">Phân bổ tài sản</span></div>
+          {holdings.length === 0 ? <p style={{ fontSize: 13, padding: '20px 0', textAlign: 'center', color: 'var(--text-muted)' }}>Chưa có dữ liệu</p> : (
+            <div style={{ width: '100%', height: 260 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={pieData} cx="50%" cy="45%" innerRadius={55} outerRadius={80} paddingAngle={4} dataKey="value" stroke="none">
+                    {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip formatter={(val) => formatPrice(val)} itemStyle={{ color: 'var(--text-primary)', fontSize: 13 }} contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border)', borderRadius: '6px' }} />
+                  <Legend iconType="circle" verticalAlign="bottom" wrapperStyle={{ fontSize: 12, lineHeight: 1.4, color: 'var(--text-primary)', paddingTop: 10 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
 
-      {/* Holdings & News */}
-      <div className="grid-2" style={{ gap: 14, alignItems: 'start' }}>
         {/* Holdings */}
-        <div className="card">
+        <div className="card" style={{ height: '100%' }}>
           <div className="card-header">
             <span className="card-title">Danh mục</span>
             <button className="btn btn-ghost btn-sm" onClick={() => navigate('/portfolio')}>Xem tất cả →</button>
@@ -192,44 +197,31 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
-
-        {/* News */}
-        <div className="card">
-          <div className="card-header">
-            <span className="card-title">Tin tức nổi bật</span>
-            <button className="btn btn-ghost btn-sm" onClick={() => navigate('/market')}>Xem thêm →</button>
-          </div>
-          {news.length === 0 ? (
-            <div className="loading"><div className="spinner" /></div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {news.map((n, i) => (
-                <a key={i} href={n.url} target="_blank" rel="noopener noreferrer"
-                  style={{ display: 'block', padding: '8px 0', borderBottom: i < news.length - 1 ? '1px solid var(--border)' : 'none', cursor: 'pointer' }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 4, lineHeight: 1.4 }}>
-                    {n.headline}
-                  </div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                    {n.source} • {new Date(n.datetime * 1000).toLocaleDateString('vi-VN')}
-                  </div>
-                </a>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
 
-      {/* Quick AI */}
-      <div className="card" style={{ marginTop: 14 }}>
+      {/* News (Row 3 - Full width) */}
+      <div className="card">
         <div className="card-header">
-          <span className="card-title">🤖 Trợ lý AI</span>
+          <span className="card-title">Tin tức nổi bật</span>
+          <button className="btn btn-ghost btn-sm" onClick={() => navigate('/market')}>Xem thêm →</button>
         </div>
-        <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 10 }}>
-          Hỏi AI về danh mục đầu tư, giải thích thuật ngữ tài chính, hoặc tóm tắt tin tức thị trường.
-        </p>
-        <button className="btn btn-primary" onClick={() => navigate('/assistant')}>
-          🤖 Mở AI Advisor
-        </button>
+        {news.length === 0 ? (
+          <div className="loading"><div className="spinner" /></div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {news.map((n, i) => (
+              <a key={i} href={n.url} target="_blank" rel="noopener noreferrer"
+                style={{ display: 'block', padding: '8px 0', borderBottom: i < news.length - 1 ? '1px solid var(--border)' : 'none', cursor: 'pointer' }}>
+                <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 4, lineHeight: 1.4 }}>
+                  {n.headline}
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                  {n.source} • {new Date(n.datetime * 1000).toLocaleDateString('vi-VN')}
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
