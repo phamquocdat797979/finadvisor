@@ -6,6 +6,7 @@ import { signOut } from '../services/supabase'
 const navItems = [
   { path: '/dashboard', icon: '📊', label: 'Dashboard' },
   { path: '/portfolio', icon: '💼', label: 'Danh mục' },
+  { path: '/stocks', icon: '📈', label: 'Bảng giá' },
   { path: '/market', icon: '📰', label: 'Thị trường' },
   { path: '/assistant', icon: '🤖', label: 'AI Advisor' },
 ]
@@ -13,6 +14,7 @@ const navItems = [
 const pageTitles = {
   '/dashboard': { title: 'Dashboard', sub: 'Tổng quan tài chính của bạn' },
   '/portfolio': { title: 'Danh mục đầu tư', sub: 'Quản lý cổ phiếu nắm giữ' },
+  '/stocks': { title: 'Bảng giá Live', sub: 'Giao dịch theo thời gian thực' },
   '/market': { title: 'Thị trường', sub: 'Tin tức và dữ liệu thị trường' },
   '/assistant': { title: 'AI Advisor', sub: 'Trợ lý tài chính thông minh' },
   '/settings': { title: 'Cài đặt', sub: 'Quản lý tài khoản' },

@@ -5,6 +5,7 @@ import AuthPage from './pages/AuthPage'
 import DashboardPage from './pages/DashboardPage'
 import PortfolioPage from './pages/PortfolioPage'
 import MarketPage from './pages/MarketPage'
+import StocksPage from './pages/StocksPage'
 import AssistantPage from './pages/AssistantPage'
 import SettingsPage from './pages/SettingsPage'
 import Layout from './components/Layout'
@@ -34,6 +35,7 @@ const AppRoutes = () => (
       <Route index element={<Navigate to="/dashboard" replace />} />
       <Route path="dashboard" element={<DashboardPage />} />
       <Route path="portfolio" element={<PortfolioPage />} />
+      <Route path="stocks" element={<StocksPage />} />
       <Route path="market" element={<MarketPage />} />
       <Route path="assistant" element={<AssistantPage />} />
       <Route path="settings" element={<SettingsPage />} />
