@@ -22,8 +22,15 @@ export default function AuthPage() {
         await signIn(email, password)
         navigate('/dashboard')
       } else {
-        await signUp(email, password, fullName)
-        setSuccess('Đăng ký thành công! Vui lòng kiểm tra email để xác nhận tài khoản.')
+        const data = await signUp(email, password, fullName)
+        // Check "Gương chiếu yêu": Bắt bài Supabase cố tình trả về success ảo khi trùng Email
+        if (data?.user?.identities && data.user.identities.length === 0) {
+          setError('Thất bại: Email này đã được đăng ký từ trước. Vui lòng quay lại tab Đăng Nhập!')
+          setLoading(false)
+          return
+        }
+        setSuccess('Tạo tài khoản thành công! Tự động chuyển sang Đăng nhập sau 2 giây...')
+        setTimeout(() => setTab('login'), 2000)
       }
     } catch (err) {
       const msg = err.message || 'Có lỗi xảy ra'
