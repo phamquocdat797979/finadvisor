@@ -3,8 +3,9 @@ import { signIn, signUp, resetPassword, verifyOtpToken, supabase } from '../serv
 import { useNavigate } from 'react-router-dom'
 
 export default function AuthPage() {
-  const [tab, setTab] = useState('login') // 'login' | 'register' | 'forgot'
-  const [forgotStep, setForgotStep] = useState(1) // 1: Email, 2: OTP, 3: New Pass
+  const isResetting = sessionStorage.getItem('isResettingPassword') === 'true'
+  const [tab, setTab] = useState(isResetting ? 'forgot' : 'login') // 'login' | 'register' | 'forgot'
+  const [forgotStep, setForgotStep] = useState(isResetting ? 3 : 1) // 1: Email, 2: OTP, 3: New Pass
   const [otp, setOtp] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [email, setEmail] = useState('')
@@ -40,17 +41,25 @@ export default function AuthPage() {
           setSuccess('Đã gửi mã OTP (hoặc link) đến email của bạn! (Kiểm tra cả hộp thư rác).')
           setForgotStep(2)
         } else if (forgotStep === 2) {
+          // Gắn biển hiệu để chặn 'Thằng Bảo Vệ PublicRoute' không sỉ nhục đá mình vào Trang Chủ
+          sessionStorage.setItem('isResettingPassword', 'true')
+          
           await verifyOtpToken(email, otp)
           setSuccess('Xác thực Mã OTP thành công! Mời nhập mật khẩu mới.')
           setForgotStep(3)
         } else if (forgotStep === 3) {
           const { error } = await supabase.auth.updateUser({ password: newPassword })
           if (error) throw error
+          
+          // Gỡ biển hiệu, thay xong rùi!
+          sessionStorage.removeItem('isResettingPassword')
+          
           setSuccess('Đổi Mật Khẩu thành công! Đang vào hệ thống...')
           setTimeout(() => navigate('/dashboard'), 2000)
         }
       }
     } catch (err) {
+      sessionStorage.removeItem('isResettingPassword') // Có lỗi thì giải tán
       const msg = err.message || 'Có lỗi xảy ra'
       if (msg.includes('Invalid login')) setError('Email hoặc mật khẩu không đúng')
       else if (msg.includes('Email not confirmed')) setError('⚠️ Vui lòng mở Hộp thư Email của bạn và bấn link xác nhận để kích hoạt tài khoản!')
@@ -115,7 +124,7 @@ export default function AuthPage() {
               <button className="btn btn-primary" type="submit" disabled={loading} style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}>
                 {loading ? '⏳ Xin chờ...' : forgotStep === 1 ? '📩 Gửi yêu cầu OTP' : forgotStep === 2 ? '✅ Xác thực OTP' : '🔒 Đặt lại mật khẩu'}
               </button>
-              <button type="button" onClick={() => { setTab('login'); setForgotStep(1); setError(''); setSuccess(''); }} style={{ width: '100%', marginTop: 12, background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 13 }}>
+              <button type="button" onClick={() => { setTab('login'); setForgotStep(1); setError(''); setSuccess(''); sessionStorage.removeItem('isResettingPassword'); }} style={{ width: '100%', marginTop: 12, background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 13 }}>
                 ← Quay lại Đăng nhập
               </button>
             </>

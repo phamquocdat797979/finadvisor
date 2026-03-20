@@ -24,7 +24,11 @@ const ProtectedRoute = ({ children }) => {
 const PublicRoute = ({ children }) => {
   const { user, loading } = useAuth()
   if (loading) return null
-  if (user) return <Navigate to="/dashboard" replace />
+  
+  // Biển hiệu miễn tử: Cho phép User nán lại AuthPage để ghi mật khẩu mới!
+  const isResetting = sessionStorage.getItem('isResettingPassword') === 'true'
+  if (user && !isResetting) return <Navigate to="/dashboard" replace />
+  
   return children
 }
 
