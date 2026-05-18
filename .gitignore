@@ -2,3 +2,7 @@
 .env
 node_modules
 dist
+*.md
+!README.md
+*.sql
+test_models.js
