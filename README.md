@@ -45,18 +45,18 @@ Sơ đồ dưới đây mô tả cách các thành phần trong hệ thống tư
 ```mermaid
 graph TD
     subgraph Client
-        U([🧑 Người Dùng])
-        UI[💻 Giao Diện Web <br/>(React / Vite)]
+        U(["🧑 Người Dùng"])
+        UI["💻 Giao Diện Web <br/>(React / Vite)"]
     end
 
     subgraph Backend as a Service
-        Auth[🔐 Supabase Auth]
-        DB[(🗄️ Supabase PostgreSQL)]
+        Auth["🔐 Supabase Auth"]
+        DB[("🗄️ Supabase PostgreSQL")]
     end
 
     subgraph External APIs
-        Finnhub((📈 Finnhub API))
-        Gemini((🧠 Google Gemini API))
+        Finnhub(("📈 Finnhub API"))
+        Gemini(("🧠 Google Gemini API"))
     end
 
     U -- "1. Đăng nhập / Tương tác" --> UI
